@@ -1,34 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:provider/provider.dart';
-import 'package:todo_solid/controller/task_controller.dart';
-import 'package:todo_solid/repo/task_repository.dart';
-import 'package:todo_solid/screens/task_screen.dart';
-import 'models/task.dart';
+import 'package:todo_solid/ui_package.dart/screens/todo_screen.dart';
+import 'data_package/models/todo.dart';
+import 'data_package/local_storage/hive_storage.dart';
+import 'repository_package/task_repository.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
   await Hive.initFlutter();
-  Hive.registerAdapter(TaskAdapter());
-  await Hive.openBox<Task>('tasks');
 
-  runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider(
-            create: (_) => TaskController(HiveTaskRepository())),
-      ],
-      child: MyApp(),
-    ),
-  );
-}
+  Hive.registerAdapter(TodoAdapter());
 
-class MyApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: TaskScreen(),
-    );
-  }
+  final box = await Hive.openBox<Todo>('todoBox');
+  await box.clear();
+
+  final hiveStorage = HiveStorage();
+  final repository = TodoRepository(hiveStorage);
+
+  runApp(MaterialApp(
+    home: TodoScreen(repository: repository),
+  ));
 }
